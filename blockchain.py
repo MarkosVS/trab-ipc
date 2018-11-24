@@ -1,16 +1,24 @@
 '''
 author          :   Marcos Vinicius Sombra
-version         :   0.2
+version         :   0.3
 python_version  :   3.6.7
 description     :   Código para implementar uma blockchain simples
 '''
 
+import binascii
 from uuid import uuid4
+
 from hashlib import sha256
+from Crypto.Hash import SHA
+from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+
+from collections import OrderedDict
 
 from time import time
 
 DIFICULDADE = 4
+MINERADOR = 'Blockchain'
 
 
 class Blockchain:
@@ -36,6 +44,36 @@ class Blockchain:
         for bloco in self.corrente:
             msg += str(bloco) + '\n'
         return 'Blockchain:\n' + msg
+
+    def verificar_assinatura(self, remetente, assinatura, transacao):
+        '''
+        Verifica se a assinatura de uma transação está correta
+        '''
+        chave_publica = RSA.importKey(binascii.unhexlify(remetente))
+        verificador = PKCS1_v1_5.new(chave_publica)
+        h = SHA.new(str(transacao).encode('utf-8'))
+        assinatura = binascii.unhexlify(assinatura)
+
+        return verificador.verify(h, assinatura)
+
+    def enviar_transacao(self, remetente, destino, quantia, assinatura):
+        '''
+        Adiciona uma transação à lista de transações
+        '''
+        t = OrderedDict({'endereco_remetente': self.endereco_remetente,
+                         'endereco_destino': self.endereco_destino,
+                         'valor': self.quantia})
+
+        if(remetente == MINERADOR):
+            self.transacoes.append(t)
+            return len(self.corrente) + 1
+        else:
+            verificacao = self.verificar_assinatura(remetente, assinatura, t)
+            if(verificacao):
+                self.transacoes.append(t)
+                return len(self.corrente) + 1
+            else:
+                return False
 
     def criar_bloco(self, nonce, hash_anterior):
         '''
