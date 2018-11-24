@@ -1,13 +1,16 @@
 '''
 author          :   Marcos Vinicius Sombra
-version         :   0.1
+version         :   0.2
 python_version  :   3.6.7
-description     :   Código para implementar umablockchain simples
+description     :   Código para implementar uma blockchain simples
 '''
 
 from uuid import uuid4
+from hashlib import sha256
 
 from time import time
+
+DIFICULDADE = 4
 
 
 class Blockchain:
@@ -38,9 +41,38 @@ class Blockchain:
         '''
         Cria um bloco novo e adiciona-o na blockchain
         '''
-        bloco = {'num_bloco': len(self.chain) + 1,
+        bloco = {'num_bloco': len(self.corrente) + 1,
                  'timestamp': time(),
                  'transacoes': self.transacoes,
                  'nonce': nonce,
                  'hash_anterior': hash_anterior}
+
+        self.transacoes = []
+        self.corrente.append(bloco)
         return bloco
+
+    def get_hash(self, bloco):
+        ''' Retorna a hash de um bloco '''
+        s = str(bloco).encode()
+        return sha256(s).hexdigest()
+
+    def proof_of_work(self):
+        '''
+        Algoritmo de prova de trabalho, garantindo maior segurança à rede
+        '''
+        ultimo_bloco = self.corrente[-1]
+        ultimo_hash = self.get_hash(ultimo_bloco)
+
+        nonce = 0
+        while(not self.prova_valida(self.transacoes, ultimo_hash, nonce)):
+            nonce += 1
+
+        return nonce
+
+    def prova_valida(self, transacoes, ultimo_hash, nonce, dif=DIFICULDADE):
+        '''
+        Valida uma prova de trabalho
+        '''
+        palpite = (str(transacoes) + str(ultimo_hash) + str(nonce)).encode()
+        palpite = sha256(palpite).hexdigest()
+        return palpite[:dif] == '0' * dif

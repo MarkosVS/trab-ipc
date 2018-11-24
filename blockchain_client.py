@@ -13,6 +13,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA
 from Crypto.Signature import PKCS1_v1_5
 
+from collections import OrderedDict
+
 
 class Transacao:
     '''
@@ -37,9 +39,10 @@ class Transacao:
 
     def get_dicionario(self):
         ''' Retorna um dicionario contendo as informações da transação '''
-        return {'endereco_remetente': self.endereco_remetente,
-                'endereco_destino': self.endereco_destino,
-                'valor': self.quantia}
+        r = {'endereco_remetente': self.endereco_remetente,
+             'endereco_destino': self.endereco_destino,
+             'valor': self.quantia}
+        return OrderedDict(r)
 
     def assinar_transacao(self):
         '''
