@@ -2,79 +2,45 @@
 author          :   Marcos Vinicius Sombra
 version         :   0.1
 python_version  :   3.6.7
-description     :   Código para implementar uma blockchain simples
+description     :   Código para implementar umablockchain simples
 '''
 
-# import json
-import binascii
+from uuid import uuid4
 
-import Crypto.Random as crip_random
-from Crypto.PublicKey import RSA
-from Crypto.Hash import SHA
-from Crypto.Signature import PKCS1_v1_5
+from time import time
 
 
-class Transacao:
+class Blockchain:
     '''
-    Classe que implementa uma transação em uma blockchain
-    Usuário que deseja enviar tokens para outro cria uma instância de Transacao
+    Classe que representa a Blockchain em si
     '''
 
-    def __init__(self, end_remetente, priv_remetente, end_destino, quantia):
+    def __init__(self):
         '''
-        Inicia a transição com os atributos a seguir
+        Instancia uma Blockchain com os atributos a seguir:
         '''
-        self.quantia = quantia
-        self.endereco_remetente = end_remetente
-        self.chave_privada_remetente = priv_remetente
-        self.endereco_destino = end_destino
+        self.transacoes = []  # transações "pendentes"
+        self.corrente = []  # lista de blocos adicionados
+        self.nodes = set()
+        self.id_node = str(uuid4()).replace('-', '')
+        self.criar_bloco(0, '00')
 
     def __str__(self):
         '''
-        Retorna a string do dicionario contendo as informações da transação
+        Retorna uma string representando a blockchain
         '''
-        return str(self.get_dicionario()).encode('utf-8')
+        msg = 'Blocos:\n'
+        for bloco in self.corrente:
+            msg += str(bloco) + '\n'
+        return 'Blockchain:\n' + msg
 
-    def get_dicionario(self):
-        ''' Retorna um dicionario contendo as informações da transação '''
-        return {'endereco_remetente': self.endereco_remetente,
-                'endereco_destino': self.endereco_destino,
-                'valor': self.quantia}
-
-    def assinar_transacao(self):
+    def criar_bloco(self, nonce, hash_anterior):
         '''
-        Remetente assina a transação, como forma de validação
+        Cria um bloco novo e adiciona-o na blockchain
         '''
-        chave = RSA.importKey(binascii.unhexlify(self.chave_privada_remetente))
-        assinante = PKCS1_v1_5.new(chave)
-        h = SHA.new(self.__str__())
-        return binascii.hexlify(assinante.sign(h)).decode('ascii')
-
-
-def carteira():
-    '''
-    Retorna uma carteira nova
-    Retorna um dicionario com as chaves
-    '''
-    rand = crip_random.new().read
-    chave_privada = RSA.generate(1024, rand)
-    chave_publica = chave_privada.publickey()
-
-    chave_privada = chave_privada.exportKey(format='DER')
-    chave_publica = chave_publica.exportKey(format='DER')
-
-    resp = {'chave_privada': binascii.hexlify(chave_privada).decode('ascii'),
-            'chave_publica': binascii.hexlify(chave_publica).decode('ascii')
-            }
-
-    return resp
-
-
-def criar_transacao(end_remetente, priv_remetente, end_destino, quantia):
-    '''
-    Retorna um dicionário com uma transação e uma assinatura
-    '''
-    t = Transacao(end_remetente, priv_remetente, end_destino, quantia)
-    resp = {'transacao': t.get_dicionario, 'assinatura': t.assinar_transacao()}
-
-    return resp
+        bloco = {'num_bloco': len(self.chain) + 1,
+                 'timestamp': time(),
+                 'transacoes': self.transacoes,
+                 'nonce': nonce,
+                 'hash_anterior': hash_anterior}
+        return bloco
