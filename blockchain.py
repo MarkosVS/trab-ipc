@@ -26,7 +26,7 @@ class Transacao:
         '''
         self.quantia = quantia
         self.endereco_remetente = end_remetente
-        self.chave_privada_remetente - priv_remetente
+        self.chave_privada_remetente = priv_remetente
         self.endereco_destino = end_destino
 
     def __str__(self):
@@ -34,9 +34,6 @@ class Transacao:
         Retorna a string do dicionario contendo as informações da transação
         '''
         return str(self.get_dicionario()).encode('utf-8')
-
-    def __getattr__(self, attr):
-        return self.data[attr]
 
     def get_dicionario(self):
         ''' Retorna um dicionario contendo as informações da transação '''
