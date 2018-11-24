@@ -1,62 +1,83 @@
-# imports
-from datetime import datetime
-from hashlib import sha256
+'''
+author          :   Marcos Vinicius Sombra
+version         :   0.1
+python_version  :   3.6.7
+description     :   Código para implementar uma blockchain simples
+'''
+
+# import json
+import binascii
+
+import Crypto.Random as crip_random
+from Crypto.PublicKey import RSA
+from Crypto.Hash import SHA
+from Crypto.Signature import PKCS1_v1_5
 
 
-class Block:
-    def __init__(self, dado):
-        self.index = 0
-        self.dado = dado
-        self.proximo = None
-        self.nonce = 0
-        self.hash_anterior = 0x0
-        self.carimbo_temporal = datetime.now()
+class Transacao:
+    '''
+    Classe que implementa uma transação em uma blockchain
+    Usuário que deseja enviar tokens para outro cria uma instância de Transacao
+    '''
+
+    def __init__(self, end_remetente, priv_remetente, end_destino, quantia):
+        '''
+        Inicia a transição com os atributos a seguir
+        '''
+        self.quantia = quantia
+        self.endereco_remetente = end_remetente
+        self.chave_privada_remetente - priv_remetente
+        self.endereco_destino = end_destino
 
     def __str__(self):
-        return "Index: " + str(self.index) + "\nHash: " + str(self.hash())
+        '''
+        Retorna a string do dicionario contendo as informações da transação
+        '''
+        return str(self.get_dicionario()).encode('utf-8')
 
-    def hash(self):
-        h = sha256()
-        h.update(
-            str(self.nonce).encode('utf-8') +
-            str(self.dado).encode('utf-8') +
-            str(self.hash_anterior).encode('utf-8') +
-            str(self.carimbo_temporal).encode('utf-8') +
-            str(self.index).encode('utf-8')
-        )
+    def __getattr__(self, attr):
+        return self.data[attr]
 
-        return h.hexdigest()
+    def get_dicionario(self):
+        ''' Retorna um dicionario contendo as informações da transação '''
+        return {'endereco_remetente': self.endereco_remetente,
+                'endereco_destino': self.endereco_destino,
+                'valor': self.quantia}
 
-
-class Blockchain:
-    def __init__(self):
-        self.ultimo = Block('Genesis')
-        self.primeiro = self.ultimo
-        self.max_nonce = 2 ** 32
-        self.dificuldade = 10
-        self.alvo = 2 ** (256 - self.dificuldade)
-
-    def add(self, novo):
-        novo.hash_anterior = self.ultimo.hash()
-        novo.index = self.ultimo.index + 1
-        self.ultimo.proximo = novo
-        self.ultimo = self.ultimo.proximo
-
-    def mine(self, bloco):
-        for i in range(self.max_nonce):
-            if(int(bloco.hash(), 16) <= self.alvo):
-                self.add(bloco)
-                print(bloco)
-                break
-            else:
-                bloco.nonce += 1
+    def assinar_transacao(self):
+        '''
+        Remetente assina a transação, como forma de validação
+        '''
+        chave = RSA.importKey(binascii.unhexlify(self.chave_privada_remetente))
+        assinante = PKCS1_v1_5.new(chave)
+        h = SHA.new(self.__str__())
+        return binascii.hexlify(assinante.sign(h)).decode('ascii')
 
 
-bc = Blockchain()
-for i in range(10):
-    bloco = Block('Bloco {}'.format(i))
-    bc.mine(bloco)
+def carteira():
+    '''
+    Retorna uma carteira nova
+    Retorna um dicionario com as chaves
+    '''
+    rand = crip_random.new().read
+    chave_privada = RSA.generate(1024, rand)
+    chave_publica = chave_privada.publickey()
 
-while(bc.primeiro is not None):
-    print(bc.primeiro)
-    bc.primeiro = bc.primeiro.proximo
+    chave_privada = chave_privada.exportKey(format='DER')
+    chave_publica = chave_publica.exportKey(format='DER')
+
+    resp = {'chave_privada': binascii.hexlify(chave_privada).decode('ascii'),
+            'chave_publica': binascii.hexlify(chave_publica).decode('ascii')
+            }
+
+    return resp
+
+
+def criar_transacao(end_remetente, priv_remetente, end_destino, quantia):
+    '''
+    Retorna um dicionário com uma transação e uma assinatura
+    '''
+    t = Transacao(end_remetente, priv_remetente, end_destino, quantia)
+    resp = {'transacao': t.get_dicionario, 'assinatura': t.assinar_transacao()}
+
+    return resp
