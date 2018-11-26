@@ -1,6 +1,6 @@
 '''
 author          :   Marcos Vinicius Sombra
-version         :   0.3.1
+version         :   0.4
 python_version  :   3.6.7
 description     :   Código para implementar uma blockchain simples
 '''
@@ -139,3 +139,43 @@ class Blockchain:
         # retorna se o palpite começa com n zeros
         # n = dificuldade
         return palpite[:dif] == '0' * dif
+
+    def blockchain_valida(self, corrente):
+        '''
+        Checa se a blockchain é válida
+        '''
+
+        # percorre os blocos (em pares)
+        bloco_anterior = corrente[0]
+        i = 1
+
+        while(i < len(corrente)):
+            bloco = corrente[i]
+
+            # checa se a hash está correta
+            if(bloco['hash_anterior'] != self.get_hash(bloco_anterior)):
+                return False
+
+            # checa se a prova de trabalho é correta
+
+            # lista de transações (exceto a última)
+            # ultima é recompensa de mineração
+            tr_list = bloco['transacoes'][:-1]
+            # elementos de cada transação
+            trel = ['endereco_remetente', 'endereco_destino', 'valor']
+            # lista de transações
+            tr_list = [OrderedDict((k, tr[k]) for k in trel) for tr in tr_list]
+            # hash do bloco anterior
+            hash_anterior = bloco['hash_anterior']
+            nonce = bloco['nonce']
+            dif = DIFICULDADE
+
+            if(not self.prova_valida(tr_list, hash_anterior, nonce, dif)):
+                return False
+
+            # atualiza os blocos
+            bloco_anterior = bloco
+            i += 1
+
+        # retorna verdadeiro
+        return True

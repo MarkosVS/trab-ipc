@@ -1,6 +1,6 @@
 '''
 author          :   Marcos Vinicius Sombra
-version         :   0.1.1
+version         :   0.1.2
 python_version  :   3.6.7
 description     :   Código para implementar uma interface de blockchain simples
 '''
