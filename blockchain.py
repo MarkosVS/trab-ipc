@@ -1,10 +1,11 @@
 '''
 author          :   Marcos Vinicius Sombra
-version         :   0.4.1
+version         :   0.5
 python_version  :   3.6.7
 description     :   Código para implementar uma blockchain simples
 '''
 
+import requests
 import binascii
 from uuid import uuid4
 from urllib.parse import urlparse
@@ -200,4 +201,27 @@ class Blockchain:
         Resolve conflitos entre os nós da blockchain
         Substitui a nossa por uma maior
         '''
-        pass
+        vizinhos = self.nodes
+        nova_blockchain = None
+
+        max_tamanho = len(self.corrente)
+
+        # percorre os nodes da blockchain e, caso encontre uma blockchain
+        # maior e válida, substitui
+        for node in vizinhos:
+            print('http://' + node + '/chain')
+            r = requests.get('http://' + node + '/chain')
+
+            if(r.status_code == 200):
+                tamanho = r.json()['length']
+                corrente = r.json()['chain']
+
+                if(tamanho > max_tamanho and self.blockchain_valida(corrente)):
+                    nova_blockchain = corrente
+                    max_tamanho = tamanho
+
+        # sai do for aqui
+        if(nova_blockchain):
+            self.corrente = nova_blockchain
+            return True
+        return False
