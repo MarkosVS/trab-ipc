@@ -1,12 +1,13 @@
 '''
 author          :   Marcos Vinicius Sombra
-version         :   0.4
+version         :   0.4.1
 python_version  :   3.6.7
 description     :   Código para implementar uma blockchain simples
 '''
 
 import binascii
 from uuid import uuid4
+from urllib.parse import urlparse
 
 from hashlib import sha256
 from Crypto.Hash import SHA
@@ -44,6 +45,20 @@ class Blockchain:
         for bloco in self.corrente:
             msg += str(bloco) + '\n'
         return 'Blockchain:\n' + msg
+
+    def registrar_node(self, url):
+        '''
+        Adiciona um novo node na lista de nodes
+        '''
+        parse_url = urlparse(url)
+
+        if(parse_url.netloc):
+            self.nodes.add(parse_url.netloc)
+        elif parse_url.path:
+            # aceita URL fora do padrão 192.168.0.1:5000.
+            self.nodes.add(parse_url.path)
+        else:
+            raise ValueError('URL Inválida')
 
     def verificar_assinatura(self, remetente, assinatura, transacao):
         '''
@@ -179,3 +194,10 @@ class Blockchain:
 
         # retorna verdadeiro
         return True
+
+    def resolver_conflitos(self):
+        '''
+        Resolve conflitos entre os nós da blockchain
+        Substitui a nossa por uma maior
+        '''
+        pass
