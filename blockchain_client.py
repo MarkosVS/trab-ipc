@@ -78,6 +78,6 @@ def criar_transacao(end_remetente, priv_remetente, end_destino, quantia):
     Retorna um dicionário com uma transação e uma assinatura
     '''
     t = Transacao(end_remetente, priv_remetente, end_destino, quantia)
-    resp = {'transacao': t.get_dicionario, 'assinatura': t.assinar_transacao()}
+    r = {'transacao': t.get_dicionario(), 'assinatura': t.assinar_transacao()}
 
-    return resp
+    return r
