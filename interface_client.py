@@ -1,5 +1,11 @@
 from blockchain_client import (carteira, criar_transacao)
+from threading import Thread
+from collections import deque
+import socket
 import pickle
+
+fim_programa = False
+transacoes = deque([])
 
 
 def menu_inicial():
@@ -73,6 +79,24 @@ def nome_carteira_nova():
     return 'carteiras/carteira' + qtd + '.pkl'
 
 
+def client():
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    while(True):
+        while(len(transacoes) == 0):
+            pass
+
+        t, porta = transacoes.popleft()
+
+        con = ('localhost', porta)
+        client.connect(con)
+        print('Client conectado\nURL: {}\nPorta: {}'.format(con[0], con[1]))
+
+        if(fim_programa):
+            client.close()
+            break
+
+
 def main():
     print('Client-side Blockchain Service')
     print('Validação: Proof-of-work')
@@ -86,11 +110,17 @@ def main():
             print('Chave privada:\n{}'.format(nova['chave_privada']))
         elif(r == 2):
             transacao = menu_transacao()
-            print(transacao)
+            tupla = (transacao, 5000)
+            transacoes.append(tupla)
         else:
             print('Serviço encerrado')
             break
 
 
 if(__name__ == '__main__'):
-    main()
+    s = Thread(target=client)
+    s.start()
+    main = Thread(target=main)
+    main.start()
+    main.join()
+    fim_programa = True
