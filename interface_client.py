@@ -82,19 +82,19 @@ def nome_carteira_nova():
 def client():
     while(True):
         while(len(transacoes) == 0):
-            pass
+            if(fim_programa):
+                break
 
         t, porta = transacoes.popleft()
+        t = pickle.dumps(t)
 
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         con = ('localhost', porta)
         client.connect(con)
         print('Client conectado\nURL: {}\nPorta: {}'.format(con[0], con[1]))
+        client.send(t)
         # encerra o client
         client.close()
-
-        if(fim_programa):
-            break
 
 
 def main():
