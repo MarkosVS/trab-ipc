@@ -6,6 +6,7 @@ import pickle
 
 fim_programa = False
 nodes = []
+chains = []
 
 
 def menu_inicial():
@@ -25,22 +26,39 @@ def menu_inicial():
             print('Resposta inválida')
 
 
+def recuperar_blockchain(porta):
+    for i in range(len(chains)):
+        if(chains[i][0] == porta):
+            return i
+
+
 def server(porta):
-    bc = Blockchain()
     nodes.append('localhost:{}'.format(porta))
     print(nodes)
-    for node in nodes:
-        bc.registrar_node(node)
-
-    print(bc.nodes)
+    bc = Blockchain()
+    corrente = pickle.load(open('blockchain.pkl', 'rb'))
+    bc.corrente = corrente
+    chains.append([porta, bc])
+    index = recuperar_blockchain(porta)
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
     server.bind(('localhost', porta))
     server.listen(10)
 
     while(True):
+        nova_corrente = pickle.load(open('blockchain.pkl', 'rb'))
+        if(len(bc.corrente) < len(nova_corrente)):
+            bc.corrente = nova_corrente
+
+        if(len(nodes) > len(bc.nodes)):
+            for node in nodes:
+                bc.registrar_node(node)
+            # att blockchain
+            chains[index][1] = bc
+
+        print(bc.nodes)
+
         conn, client = server.accept()
 
         while(True):
@@ -59,9 +77,38 @@ def server(porta):
                 break
 
         bc.enviar_transacao(rem, dest, qt, ass)
+        chains[index][1] = bc
 
         if(fim_programa):
             break
+
+
+def menu_minerar():
+    print('Digite um node:')
+    while(True):
+        try:
+            # 'localhost:{}'.format(porta)
+            r = 'localhost:{}'
+            resp = input()
+            r.format(resp)
+        except ValueError:
+            r = -1
+        finally:
+            if(r in nodes):
+                return resp
+            print('Node não existe')
+
+
+def minerar(node):
+    bc = recuperar_blockchain(node)
+    ultimo_bloco = bc.corrente[-1]
+    nonce = bc.proof_of_work()
+
+    hash_anterior = bc.get_hash(ultimo_bloco)
+    bloco = bc.criar_bloco(nonce, hash_anterior)
+    print(bc.get_hash(bloco))
+
+    pickle.dump(bc.corrente, open('blockchain.pkl', 'wb'))
 
 
 def main():
@@ -76,7 +123,8 @@ def main():
             s.start()
             porta += 1
         elif(r == 2):
-            pass
+            node = menu_minerar()
+            minerar(node)
         else:
             print('Serviço encerrado')
             break
