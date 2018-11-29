@@ -28,8 +28,11 @@ def menu_inicial():
 def server(porta):
     bc = Blockchain()
     nodes.append('localhost:{}'.format(porta))
+    print(nodes)
     for node in nodes:
         bc.registrar_node(node)
+
+    print(bc.nodes)
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -42,7 +45,7 @@ def server(porta):
 
         while(True):
             try:
-                msg = conn.recv(1024)
+                msg = conn.recv(1024 * 10)
                 msg = pickle.loads(msg)
                 t = msg['transacao']
                 rem = t['endereco_remetente']

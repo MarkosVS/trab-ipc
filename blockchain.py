@@ -82,9 +82,9 @@ class Blockchain:
         Adiciona uma transação à lista de transações
         '''
         # dicionário da transação
-        t = OrderedDict({'endereco_remetente': self.endereco_remetente,
-                         'endereco_destino': self.endereco_destino,
-                         'valor': self.quantia})
+        t = OrderedDict({'endereco_remetente': remetente,
+                         'endereco_destino': destino,
+                         'valor': quantia})
 
         # caso a própria blockchain envie o token
         # i.e., seja uma recompensa de mineração
